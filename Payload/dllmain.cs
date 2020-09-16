@@ -13,7 +13,6 @@ class Payload
     delegate void d_print_ebp();
 
     public static IntPtr ebp_addr;
-    public static EzyHook print_ebp_hook;
 
     public unsafe static int DllMain( string param )
     {
@@ -50,11 +49,7 @@ class Payload
         aitm.Release();
 
         while ( true )
-        {
-            System.Threading.Thread.Sleep( 2000 );
-        }
-
-        return 0;
+            System.Threading.Thread.Sleep( 5 );
     }
 
     public unsafe static void hk_print_ebp()
@@ -64,96 +59,8 @@ class Payload
     }
 }
 
-class AITM
-{
-    EzyHook hook;
-
-    public unsafe AITM( IntPtr target_addr, byte[] sitm, IntPtr hook_addr )
-    {
-        sitm = sitm.Concat( new byte[] { 
-            0xe9, 0x00, 0x00, 0x00, 0x00     // jmp    hook_addr
-        } ).ToArray();
-
-        fixed ( byte* ptr = sitm )
-        {
-            var rel = (int)hook_addr - ((int)ptr + 20) - 5;
-            var jmp = BitConverter.GetBytes( rel );
-
-            sitm[sitm.Length - 4] = jmp[0];
-            sitm[sitm.Length - 3] = jmp[1];
-            sitm[sitm.Length - 2] = jmp[2];
-            sitm[sitm.Length - 1] = jmp[3];
-
-            Memory.VirtualProtect( (IntPtr)ptr, sitm.Length, 0x40, out _ );
-            hook = new EzyHook( target_addr, (IntPtr)ptr );
-        }
-    }
-
-    public void Release()
-    {
-        hook.UnHook();
-    }
-}
-
-class EzyHook
-{
-    [DllImport( "kernel32.dll" )]
-    public static extern bool VirtualProtect( IntPtr lpAddress, uint dwSize, int lpflNewProtect, out int lpflOldProtect );
-
-    public byte[] old_bytes = new byte[5];
-    bool is_hooked = false;
-
-    IntPtr target_addr, hook_addr;
-
-    public unsafe EzyHook( IntPtr target_addr, IntPtr hook_addr )
-    {
-        VirtualProtect( target_addr, 5, 0x40, out var flag );
-        Marshal.Copy( target_addr, old_bytes, 0, 5 );
-
-        *(int*)target_addr = 0xE9;
-        *(int*)(target_addr + 1) = (int)hook_addr - (int)target_addr - 5;
-
-        VirtualProtect( target_addr, 5, flag, out _ );
-
-        this.target_addr = target_addr;
-        this.hook_addr = hook_addr;
-        is_hooked = true;
-    }
-
-    public unsafe void Hook()
-    {
-        if ( is_hooked )
-            return;
-
-        VirtualProtect( target_addr, 5, 0x40, out var flag );
-        Marshal.Copy( target_addr, old_bytes, 0, 5 );
-
-        *(int*)target_addr = 0xE9;
-        *(int*)(target_addr + 1) = (int)hook_addr - (int)target_addr - 5;
-
-        VirtualProtect( target_addr, 5, flag, out _ );
-
-        is_hooked = true;
-    }
-
-    public unsafe void UnHook()
-    {
-        if ( !is_hooked )
-            return;
-
-        VirtualProtect( target_addr, 5, 0x40, out var flag );
-        Marshal.Copy( old_bytes, 0, target_addr, 5 );
-        VirtualProtect( target_addr, 5, flag, out _ );
-
-        is_hooked = false;
-    }
-}
-
 class Memory
 {
-    [DllImport( "kernel32.dll" )]
-    public static extern bool VirtualProtect( IntPtr lpAddress, int dwSize, int lpflNewProtect, out int lpflOldProtect );
-
     unsafe public static IntPtr PatternScan( IntPtr addr, int length, string signature )
     {
 
