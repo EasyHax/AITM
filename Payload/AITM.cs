@@ -14,7 +14,7 @@ class AITM
 
         fixed ( byte* ptr = shellcode )
         {
-            var rel = (int)hook_addr - ((int)ptr + shellcode.Length) - 5;
+            var rel = (int)hook_addr - ((int)ptr + shellcode.Length - 5) - 5;
             var jmp = BitConverter.GetBytes( rel );
 
             shellcode[shellcode.Length - 4] = jmp[0];

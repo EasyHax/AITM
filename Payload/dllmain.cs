@@ -16,6 +16,7 @@ class Payload
 
     public unsafe static int DllMain( string param )
     {
+                                                    /* SIGNATURE OF PRINT_EBP() FUNCTION INSIDE TARGET.EXE */
         var target_sign = "55 8B EC 81 EC ? ? ? ? 53 56 57 8D BD ? ? ? ? B9 ? ? ? ? B8 ? ? ? ? F3 AB A1 ? ? ? ? 33 C5 89 45 FC 89 6D F4";
         var target_addr = Memory.PatternScan(
             Process.GetCurrentProcess().MainModule.BaseAddress,
@@ -27,7 +28,10 @@ class Payload
 
         var hook_addr = Marshal.GetFunctionPointerForDelegate<d_print_ebp>( hk_print_ebp );
 
-       ebp_addr = Marshal.AllocHGlobal( sizeof( int ) );
+        Console.WriteLine( hook_addr );
+        Console.WriteLine( target_addr );
+
+        ebp_addr = Marshal.AllocHGlobal( sizeof( int ) );
         *(int*)ebp_addr = 0;
 
         var ebp = BitConverter.GetBytes( (int)ebp_addr );
@@ -41,12 +45,13 @@ class Payload
             0x83, 0xc4, 0x08                                          // add    esp,0x8
         };
 
-        var aitm = new AITM( target_addr, shellcode, hook_addr);
-        
-        
-        System.Threading.Thread.Sleep( 2000 );
+        var aitm = new AITM( target_addr, shellcode, hook_addr );
+        Console.WriteLine( "[*] AITM Placed" );
 
+        System.Threading.Thread.Sleep( 5000 );
         aitm.Release();
+
+        Console.WriteLine( "[*] AITM Released" );
 
         while ( true )
             System.Threading.Thread.Sleep( 5 );
