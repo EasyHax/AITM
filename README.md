@@ -10,19 +10,20 @@ An utility to detour a native function toward a managed function, while executin
 Here the Payload project is used to retrieve the address of the EBP register of the native process, using the AITM class.
 
 ## HOW TO USE
+```cs
+var aitm = new AITM( IntPtr target_addr, byte[] shellcode, IntPtr hook_addr )
+```
 
 Hooks the function at target_addr, executes the shellcode, jumps to hook_addr.
 - *target_addr : the address of the function to hook*
 - *shellcode : the shellcode / opcodes to execute*
 - *hook_addr : the address of the function to callback*
-```cs
-var aitm = new AITM( IntPtr target_addr, byte[] shellcode, IntPtr hook_addr )
-```
 
-Unhook the target function and put it in its original state.
 ```cs
 aitm.Release()
 ```
+
+Unhook the target function and put it in its original state.
 
 ## HOW IT WORKS
 
