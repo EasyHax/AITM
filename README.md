@@ -3,11 +3,11 @@ Assembly In The Middle
 
 ![](https://i.imgur.com/GZjbW2s.png)
 
-An utility to detour a function with a managed function, while executing shellcode in between.
+An utility to detour a native function toward a managed function, while executing shellcode in between.
 
 ## EXAMPLE
 
-Here the Payload project is used to retrieve the address of the EBP register from C#, using the AITM class.
+Here the Payload project is used to retrieve the address of the EBP register of the native process, using the AITM class.
 
 ## HOW TO USE
 
